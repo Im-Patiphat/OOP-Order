@@ -334,23 +334,26 @@ const main = () => {
     // แสดงรายละเอียดคำสั่งซื้อสำหรับลูกค้าคนที่ 2
     console.log("ชื่อ : " + customer2.name);
     console.log("จำนวนคำสั่งซื้อ : " + customer2.orders.length);
-    for (let i = 0; i < customer2.orders.length; i++) {
-        console.log("คำสั่งซื้อที่ : " + (i + 1));
-        for (let q = 0; q < customer2.orders[i].orderDetails.length; q++) {
 
+    customer2.orders.forEach((order, i) => {
+        console.log("คำสั่งซื้อที่ : " + (i + 1));
+
+        order.orderDetails.map((orderDetail, q) => {
             console.log(
                 "รายการที่ : " +
                 (q + 1) + " " +
-                customer2.orders[i].orderDetails[q].item.description +
+                orderDetail.item.description +
                 " จำนวน " +
-                customer2.orders[i].orderDetails[q].quantity +
+                orderDetail.quantity +
                 " ราคา " +
-                customer2.orders[i].orderDetails[q].calcSubTotal() +
+                orderDetail.calcSubTotal() +
                 " บาท"
             );
-        }
-        console.log("รวมทั้งหมด " + customer2.orders[i].calcSubTotal() + " บาท");
-    }
+        });
+
+        console.log("รวมทั้งหมด " + order.calcSubTotal() + " บาท");
+    });
+
 
 
 }
