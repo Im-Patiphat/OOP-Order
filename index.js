@@ -33,7 +33,7 @@ class Order {
     }
 
     calcTotal() {
-        return this.calcSubTotal() + this.calcTax();
+        return this.calcSubTotal() ;
     }
 
     calcTotalWeight() {
@@ -43,6 +43,16 @@ class Order {
             Weight += this.orderDetails[i].calcTotalWeight();
         }
         return Weight;
+    }
+
+    printDetail(){
+        for (let i = 0; i < this.orderDetails.length; i++) {
+            console.log(
+                "รายการที่ : " + (i + 1) + " " + this.orderDetails[i].getDetail()
+            );
+        }
+        console.log("รวมทั้งหมด " + this.calcTotal() + " บาท");
+        this.payments.printPayment();
     }
 }
 
@@ -70,7 +80,7 @@ class OrderDetail {
     }
 
     calcSubTotal() {
-        return this.item.getPriceForQuantity(this.quantity) + this.calcTax();
+        return this.item.getPriceForQuantity(this.quantity) + this.calcTax() ;
     }
 
     calcWeight() {
@@ -79,6 +89,17 @@ class OrderDetail {
 
     calcTax() {
         return this.item.getTax(this.taxStatus);
+    }
+
+    getDetail(){
+        return(
+            this.item.description +
+            " จำนวน " +
+            this.quantity +
+            " ราคา " +
+            this.calcSubTotal() +
+            " บาท" 
+        );
     }
 }
 
@@ -98,8 +119,8 @@ class Item {
         return this.price * quantity
     }
 
-    getTax(texStatus) {
-        if (texStatus === "Tex included") {
+    getTax(taxStatus) {
+        if (taxStatus === "Tax included") {
             return 0;
         } else {
             return this.price * 0.07;
@@ -115,12 +136,19 @@ class Payment {
     constructor(amount) {
         this.amount = amount;
     }
+    printPayment() {
+        console.log("ชำระด้วย.... ");
+    }
 }
 
 class Cash extends Payment {
     constructor(amount, cashTendered) {
         super(amount);
         this.cashTendered = cashTendered;
+    }
+
+    printPayment() {
+        console.log("ชำระด้วยเงินสด จำนวน "+ this.amount+" บาท");
     }
 }
 
@@ -129,6 +157,10 @@ class Check extends Payment {
         super(amount);
         this.name = name;
         this.bankID = bankID;
+    }
+
+    printPayment() {
+        console.log("ชำระด้วยเช็ค จำนวน "+ this.amount+" บาท");
     }
 
     authorized() {
@@ -142,6 +174,10 @@ class Credit extends Payment {
         this.number = number;
         this.type = type;
         this.expDate = expDate;
+    }
+
+    printPayment() {
+        console.log("ชำระด้วยบัตรเครดิต จำนวน "+ this.amount+" บาท");
     }
 
     authorized() {
@@ -172,16 +208,11 @@ const oldMain = () => {
     // console.log(customer1);
 
     // สร้างรายละเอียดคำสั่งซื้อ OrderDetail
-    const orderDetail1 = new OrderDetail(5, "Tex included");
-    orderDetail1.addItem(item1);
-    const orderDetail2 = new OrderDetail(2, "Tex included");
-    orderDetail2.addItem(item2);
-    const orderDetail3 = new OrderDetail(1, "Tex included");
-    orderDetail3.addItem(item5);
-    const orderDetail4 = new OrderDetail(3, "Tex included");
-    orderDetail4.addItem(item3);
-    const orderDetail5 = new OrderDetail(2, "Tex included");
-    orderDetail5.addItem(item4);
+    const orderDetail1 = new OrderDetail(5, "Tax included"); orderDetail1.addItem(item1);
+    const orderDetail2 = new OrderDetail(2, "Tax included"); orderDetail2.addItem(item2);
+    const orderDetail3 = new OrderDetail(1, "Tax included"); orderDetail3.addItem(item5);
+    const orderDetail4 = new OrderDetail(3, "Tax included"); orderDetail4.addItem(item3);
+    const orderDetail5 = new OrderDetail(2, "Tax included"); orderDetail5.addItem(item4);
 
 
     // เพิ่มรายละเอียดคำสั่งซื้อลงในคำสั่งซื้อ
@@ -275,21 +306,16 @@ const main = () => {
 
 
     // สร้างรายละเอียดคำสั่งซื้อ OrderDetail
-    const orderDetail1 = new OrderDetail(5, "Tex included");
-    orderDetail1.addItem(item1);
-    const orderDetail2 = new OrderDetail(2, "Tex included");
-    orderDetail2.addItem(item2);
-    const orderDetail3 = new OrderDetail(1, "Tex included");
-    orderDetail3.addItem(item5);
-    const orderDetail4 = new OrderDetail(3, "Tex included");
-    orderDetail4.addItem(item3);
-    const orderDetail5 = new OrderDetail(2, "Tex included");
-    orderDetail5.addItem(item4)
-    const orderDetail6 = new OrderDetail(1, "Tex included");
-    orderDetail6.addItem(item1);
+    const orderDetail1 = new OrderDetail(5, "Tax not included"); orderDetail1.addItem(item1);
+    const orderDetail2 = new OrderDetail(2, "Tax not included"); orderDetail2.addItem(item2);
+    const orderDetail3 = new OrderDetail(1, "Tax included"); orderDetail3.addItem(item5);
+    const orderDetail4 = new OrderDetail(3, "Tax included"); orderDetail4.addItem(item3);
+    const orderDetail5 = new OrderDetail(2, "Tax included"); orderDetail5.addItem(item4);
+    const orderDetail6 = new OrderDetail(1, "Tax included"); orderDetail6.addItem(item1);
 
     // เพิ่มคำสั่งซื้อลงในลูกค้าคนที่ 1 
     customer1.addOrder(order1);
+    customer1.addOrder(order2);
 
     // เพิ่มคำสั่งซื้อลงในลูกค้าคนที่ 2
     customer2.addOrder(order2);
@@ -309,54 +335,72 @@ const main = () => {
     order3.addOrderDetail(orderDetail3);
     order3.addOrderDetail(orderDetail5);
 
+    //Payment 
+    const cash = new Cash(order1.calcTotal(),"")
+    customer1.orders[0].addPayment(cash);
+
+    const credit = new Credit(
+        order2.calcTotal(),
+        "12345678945612",
+        "credit",
+        "10/24"
+    );
+    customer1.orders[1].addPayment(credit);
+
+    
 
     // แสดงรายละเอียดคำสั่งซื้อสำหรับลูกค้าคนที่ 1 
+    // console.log("ชื่อ : " + customer1.name);
+    // console.log("จำนวนคำสั่งซื้อ : " + customer1.orders.length);
+    // for (let i = 0; i < customer1.orders.length; i++) {
+    //     console.log("คำสั่งซื้อที่ : " + (i + 1));
+    //     for (let q = 0; q < customer1.orders[i].orderDetails.length; q++) {
+
+    //         console.log(
+    //             "รายการที่ : " +
+    //             (q + 1) + " " +
+    //             customer1.orders[i].orderDetails[q].item.description +
+    //             " จำนวน " +
+    //             customer1.orders[i].orderDetails[q].quantity +
+    //             " ราคา " +
+    //             customer1.orders[i].orderDetails[q].calcSubTotal() +
+    //             " บาท"
+    //         );
+    //     }
+    //     console.log("รวมทั้งหมด " + customer1.orders[i].calcTotal() + " บาท");
+    // }
+    // console.log("//////////////////////////////////////////////");
+    // // แสดงรายละเอียดคำสั่งซื้อสำหรับลูกค้าคนที่ 2
+    // console.log("ชื่อ : " + customer2.name);
+    // console.log("จำนวนคำสั่งซื้อ : " + customer2.orders.length);
+
+    // customer2.orders.forEach((order, i) => {
+    //     console.log("คำสั่งซื้อที่ : " + (i + 1));
+
+    //     order.orderDetails.map((orderDetail, q) => {
+    //         console.log(
+    //             "รายการที่ : " +
+    //             (q + 1) + " " +
+    //             orderDetail.item.description +
+    //             " จำนวน " +
+    //             orderDetail.quantity +
+    //             " ราคา " +
+    //             orderDetail.calcSubTotal() +
+    //             " บาท"+
+    //             " ภาษี "+ orderDetail.calcTax()
+    //         );
+    //     });
+
+    //     console.log("รวมทั้งหมด " + order.calcTotal() + " บาท");
+    // });
+
     console.log("ชื่อ : " + customer1.name);
     console.log("จำนวนคำสั่งซื้อ : " + customer1.orders.length);
-    for (let i = 0; i < customer1.orders.length; i++) {
-        console.log("คำสั่งซื้อที่ : " + (i + 1));
-        for (let q = 0; q < customer1.orders[i].orderDetails.length; q++) {
-
-            console.log(
-                "รายการที่ : " +
-                (q + 1) + " " +
-                customer1.orders[i].orderDetails[q].item.description +
-                " จำนวน " +
-                customer1.orders[i].orderDetails[q].quantity +
-                " ราคา " +
-                customer1.orders[i].orderDetails[q].calcSubTotal() +
-                " บาท"
-            );
-        }
-        console.log("รวมทั้งหมด " + customer1.orders[i].calcSubTotal() + " บาท");
+    for (let i = 0; i < customer1.orders.length; i++) { 
+    console.log("คำสั่งซื้อที่ : " + (i + 1));
+    customer1.orders[i].printDetail();
     }
-    console.log("//////////////////////////////////////////////");
-    // แสดงรายละเอียดคำสั่งซื้อสำหรับลูกค้าคนที่ 2
-    console.log("ชื่อ : " + customer2.name);
-    console.log("จำนวนคำสั่งซื้อ : " + customer2.orders.length);
-
-    customer2.orders.forEach((order, i) => {
-        console.log("คำสั่งซื้อที่ : " + (i + 1));
-
-        order.orderDetails.map((orderDetail, q) => {
-            console.log(
-                "รายการที่ : " +
-                (q + 1) + " " +
-                orderDetail.item.description +
-                " จำนวน " +
-                orderDetail.quantity +
-                " ราคา " +
-                orderDetail.calcSubTotal() +
-                " บาท"
-            );
-        });
-
-        console.log("รวมทั้งหมด " + order.calcSubTotal() + " บาท");
-    });
-
-
-
-}
+};
 
 main();
 
